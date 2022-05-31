@@ -1,0 +1,623 @@
+// KURsoVA.cpp : This file contains the 'main' function. Program execution begins and ends there.
+//
+
+#include <iostream>
+#include <windows.h>
+#include <fstream>
+#include <string.h>
+#include <iomanip>
+#include <algorithm>
+#include <stdlib.h>
+
+
+using namespace std;
+
+const int length = 10;
+string path = "c:\\Users\\ACER\\Desktop\\LoginData.txt";
+string pathUser = "c:\\Users\\ACER\\Desktop\\peoples.txt";
+string pathData = "c:\\Users\\ACER\\Desktop\\data.txt";
+ifstream fin;
+const int PIB_length = 13, stat_length = 6, city_length = 13, diagnos_length = 10, phone_length = 10;
+const int year_length = 4;
+ofstream fout;
+
+
+class Patient
+{
+private:
+    char* PIB, * stat, * city, * diagnos, * phone;
+    int year;
+public:
+
+    void Output();
+    bool YearDiag(int inputYear, string inputDiag);
+    bool CompareCity(const char* lviv);
+    bool searchPIB(const char* inputPIB);
+    bool searchYear(int inputYear);
+    bool searchDiag(string inpDiag);
+    
+    
+    Patient()
+    {
+        PIB = new char[PIB_length + 1];
+        stat = new char[stat_length + 1];
+        city = new char[city_length + 1];
+        diagnos = new char[diagnos_length + 1];
+        phone = new char[phone_length + 1];
+        year = 0;
+    }
+
+    void SetPIB(const char* PName)
+    {
+        strncpy_s(PIB, PIB_length + 1, PName, PIB_length);
+        PIB[PIB_length] = 0;
+    }
+
+    char* GetPIB()
+    {
+        //cout << "PIB: " << PIB << endl;
+        return PIB;
+    }
+
+    void SetStat(const char* Stat1)
+    {
+        strncpy_s(stat, stat_length + 1, Stat1 + PIB_length, stat_length);
+        stat[stat_length] = 0;
+    }
+
+    char* GetStat()
+    {
+        //cout << "Stat: " << stat << endl;
+        return stat;
+    }
+
+    void SetCity(const char* cityName)
+    {
+        strncpy_s(city, city_length + 1, cityName + PIB_length + stat_length + year_length, city_length);
+        city[city_length] = 0;
+    }
+
+    char* GetCity()
+    {
+        //cout << "City: " << city << endl;
+        return city;
+    }
+
+    void SetDiagnos(const char* diag)
+    {
+        strncpy_s(diagnos, diagnos_length + 1, diag + PIB_length + stat_length + year_length + city_length + phone_length, diagnos_length);
+        diagnos[diagnos_length] = 0;
+    }
+
+    char* GetDiagnos()
+    {
+        //cout << "Diagnos: " << diagnos << endl;
+        return diagnos;
+    }
+
+    void SetPhone(const char* num)
+    {
+        strncpy_s(phone, phone_length + 1, num + PIB_length + stat_length + year_length + city_length, phone_length);
+        phone[phone_length] = 0;
+    }
+
+    char* GetPhone()
+    {
+        //cout << "Phone: " << phone << endl;
+        return phone;
+    }
+
+    void SetYear(const char* date)
+    {
+        year = atoi(date + PIB_length + stat_length);
+    }
+    int GetYear()
+    {
+        //cout << "Year: " << year << endl;
+        return year;
+    }
+};
+
+
+bool Patient::CompareCity(const char* lviv = "Lviv")
+{
+    if ((strstr(city, lviv)) && (city[strlen(lviv)] == ' '))
+    {
+        return false;
+    }
+    else
+        return true;
+}
+
+bool Patient::searchPIB(const char* inputPIB)
+{
+    if ((strstr(PIB, inputPIB)) && (PIB[strlen(inputPIB)] == ' ')) return true;
+    else
+        return false;
+}
+
+bool Patient::searchYear(int inputYear)
+{
+    if (year == inputYear) return true;
+    else return false;
+}
+
+bool Patient::searchDiag(string inpDiag)
+{
+    if (diagnos == inpDiag) return true;
+    else return false;
+}
+
+bool Patient::YearDiag(int inputYear, string inputDiag)
+{
+    if (year < inputYear && inputDiag == diagnos)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+void Patient::Output()
+{
+    cout << "|----------------------------------------------------------------------|" << endl;
+    cout << "| " << setw(13) << PIB << "| " << setw(6) << stat << " | " << setw(4) << year << " | " << setw(13) << city << "| " << setw(10) << phone << " | " << setw(10) << diagnos << "| " << endl;
+    cout << "|----------------------------------------------------------------------|" << endl;
+}
+
+int CompPIB(const void* a, const void* b)
+{
+    return strcmp(((Patient*)a) -> GetPIB(), ((Patient*)b)->GetPIB());
+}
+int CompDiag(const void* a, const void* b)
+{
+    return strcmp(((Patient*)a)->GetDiagnos(), ((Patient*)b)->GetDiagnos());
+}
+
+void sortPIB(int n, Patient mas[])
+{
+    qsort(mas, n, sizeof(Patient), CompPIB);
+}
+
+void sortDiag(int n, Patient mas[])
+{
+    qsort(mas, n, sizeof(Patient), CompDiag);
+}
+
+bool compareYear(Patient year1, Patient year2)
+{
+    return year1.GetYear() > year2.GetYear();
+}
+
+
+class Auth
+{
+private:
+    char* log, * pass;
+    int role;
+
+public:
+    Auth()
+    {
+        log = new char[length + 1];
+        pass = new char[length + 1];
+        role = 0;
+    }
+    ~Auth()
+    {
+        delete[] log;
+        delete[] pass;
+    }
+
+    void SetLogin(const char* logValue)
+    {
+        strncpy_s(log, length + 1, logValue, length);
+        log[length] = 0;
+
+    }
+    void SetPass(const char* passValue)
+    {
+        strncpy_s(pass, length + 1, passValue + length, length);
+        pass[length] = 0;
+
+    }
+    void SetRole(const char* roleValue)
+    {
+        role = atoi(roleValue + 2 * length);
+
+    }
+
+    int GetRole()
+    {
+        cout << "role = " << role << endl;
+        return role;
+    }
+    char* GetLogin()
+    {
+        cout << "login: " << log << endl;
+        return log;
+    }
+
+    bool CompareAuth(const char* logn, const char* pas)
+    {
+        if (((strstr(log, logn)) && (log[strlen(logn)] == ' ')) && ((strstr(pass, pas)) && (pass[strlen(pas)] == ' ')))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+};
+
+void fileRead(char fread[length + 2])
+{
+    fin.getline(fread, 2 * length + 2);
+}
+
+void menuSearch()
+{
+    cout << "           Меню пошуку" << endl;
+    cout << "1. За прізвищем" << endl;
+    cout << "2. За роком народження" << endl;
+    cout << "3. За діагнозом" << endl;
+    cout << "Ваш вибір: ";
+}
+
+void menuSort()
+{
+    cout << "           Меню сортування" << endl;
+    cout << "1. За прізвищем" << endl;
+    cout << "2. За роком народження" << endl;
+    cout << "3. За діагнозом" << endl;
+    cout << "Ваш вибір: ";
+}
+
+void userMenu()
+{
+    cout << "          Меню користувача" << endl;
+    cout << "1. Перегляд всіх даних" << endl;
+    cout << "2. Перегляд умовних даних" << endl;
+    cout << "3. Перегляд іногородніх пацієнтів" << endl;
+    cout << "4. Пошук даних" << endl;
+    cout << "5. Сортування даних" << endl;
+    cout << "Ваш вибір: ";
+}
+
+
+void adminMenu()
+{
+    cout << "        Меню адміністратора" << endl;
+    cout << "Виберіть з чим працювати: " << endl;
+    cout << " 1. Робота з обліковими записами користувачів" << endl;
+    cout << " 2. Робота з файлом даних" << endl;
+    cout << "Ваш вибір: ";
+}
+
+
+
+//if (choose == "delf")
+//{
+//    if (remove("c:\\Users\\ACER\\Desktop\\peoples.txt") != 0) {
+//        cout << "Помилка видалення файлу!" << endl;
+//    }
+//    else cout << "Файл видалено" << endl;
+//}
+
+
+
+
+int main()
+{
+    
+    SetConsoleOutputCP(1251);
+
+    Patient peoples[7];
+    Auth authData[length + 1];
+
+    char tmp1[length + 2];
+    char tmp2[length * 2];
+    char adminfRead[length * 2];
+    bool verif;
+
+
+
+    string loginChoose;
+
+    int tmpYear;
+    string tmpDiag, searchDiag;
+
+    
+
+    char log1[length + 1], pass1[length + 1], PibTmp[PIB_length+1];
+    int i = 0, r1, peopleCount = 5, choosePart, chooseUser, chooseSearch, chooseSort, searchYear;
+
+    fin.open(pathUser);
+    while (fin)
+    {
+        fin.getline(tmp2, 6 * length + 2);
+        //cout << "TMP2 = " << tmp2 << endl;
+
+        if (fin)
+        {
+            if (i > length) cout << "Файл надто довгий!" << endl;
+            peoples[i].SetPIB(tmp2);
+            //peoples[i].GetPIB();
+            peoples[i].SetStat(tmp2);
+           // peoples[i].GetStat();
+            peoples[i].SetYear(tmp2);
+            //peoples[i].GetYear();
+            peoples[i].SetCity(tmp2);
+            //peoples[i].GetCity();
+            peoples[i].SetPhone(tmp2);
+            //peoples[i].GetPhone();
+            peoples[i].SetDiagnos(tmp2);
+            //peoples[i].GetDiagnos();
+
+            i = i + 1;
+        }
+    }
+    fin.close();
+
+
+    fin.open(path, ios::app);
+    while (fin)
+    {
+        fileRead(tmp1);
+        cout << "Tmp = " << tmp1 << endl;
+
+        if (fin)
+        {
+            if (i > length) cout << "Файл надто довгий!" << endl;
+            authData[i].SetLogin(tmp1);
+            authData[i].GetLogin();
+            authData[i].SetPass(tmp1);
+            authData[i].SetRole(tmp1);
+
+
+            i = i + 1;
+        }
+
+    }
+    fin.close();
+
+    int user_count = i;
+    char flag = 'w';
+    while (flag == 'w')
+    {
+        loginChoose = "y";
+        while (loginChoose == "y")
+        {
+            cout << "Логін: ";
+            cin >> log1;
+            cout << "Пароль: ";
+            cin >> pass1;
+
+            r1 = 2;
+
+            for (i = 0; i < user_count; i++)
+            {
+                if (authData[i].CompareAuth(log1, pass1))
+                {
+                    verif = true;
+                    r1 = authData[i].GetRole();
+                    break;
+                }
+
+            }
+
+            if (r1 == 2)
+            {
+                verif = false;
+                cout << "Хибний пароль або логін! Повторити сробу? (y/n): ";
+                cin >> loginChoose;
+                if (loginChoose == "n") return 0;
+            }
+            else loginChoose == "n";
+
+            if (verif == true)
+            {
+                
+                while (true)
+                {
+                    if (r1 == 1)
+                    {
+                        
+                        adminMenu();
+                        cin >> choosePart;
+                        if (choosePart == 1)
+                        {
+                            string choose;
+                            char temp[length + 2];
+
+                            cout << "Перегляд всіх облікових записів (d)" << endl;
+                            cout << "Додати новий обліковий запис (add)" << endl;
+                            cout << "Редагувати обліковий запис (edit)" << endl;
+                            cout << "Видалити обліковий запис (del)" << endl;
+
+                            cout << "Ваш вибір: ";
+                            cin >> choose;
+
+                            if (choose == "d")
+                            {
+                                fin.open(path);
+                                while (fin)
+                                {
+                                    fileRead(temp);
+                                    cout << temp << endl;
+
+                                }
+                                fin.close();
+                            }
+                            if (choose == "add")
+                            {
+                                string Pass, Log;
+                                int Role;
+                                cout << "Введіть логін: ";
+                                cin >> Log;
+                                cout << "Введіть пароль: ";
+                                cin >> Pass;
+                                cout << "Назначте роль: ";
+                                cin >> Role;
+
+                                if (Role != 0 && Role != 1) cout << "Введено невірне значення!" << endl;
+                                else
+                                {
+                                    fout.open(path, ios::app);
+                                    fout << "\n" << Log << "      " << Pass << "      " << Role;
+                                    fout.close();
+                                    cout << "Обліковий запис додано!" << endl;
+                                }
+                            }
+                        }
+                        if (choosePart == 2)
+                        {
+                            string choose;
+                            
+
+                            cout << "1. Зчитати дані з файлу(r)" << endl;
+                            cout << "2. Записати дані у файл(w)" << endl;
+                            cout << "3. Видалити файл(delf)" << endl;
+                            cout << "Ваш вибір: ";
+                            cin >> choose;
+                            if (choose == "r")
+                            {
+                                fin.open(pathUser);
+                                while (fin)
+                                {
+                                    fin.getline(adminfRead, 6 * length + 2); 
+                                }
+                                cout << "Файл прочитаний!" << endl;
+                                fin.close();
+                            }
+                            if (choose =="w")
+                            {
+                                fout.open(pathData, ios::app);
+                                while (fout)
+                                {    
+                                    fout << adminfRead;
+                                }
+                                fout.close();
+                            }
+                        }
+                        
+                    }
+                    if (r1 == 0)
+                    {
+
+                        userMenu();
+                        cin >> chooseUser;
+
+                        if (chooseUser == 1)
+                        {
+
+                            for (i = 0; i < peopleCount; i++)
+                            {
+                                peoples[i].Output();
+                            }
+
+                        }
+                        if (chooseUser == 2)
+                        {
+                            cout << "Введіть рік: ";
+                            cin >> tmpYear;
+                            cout << "Введіть діагноз: ";
+                            cin >> tmpDiag;
+                            for (i = 0; i < peopleCount; i++)
+                            {
+                                if (peoples[i].YearDiag(tmpYear, tmpDiag))
+                                {
+                                    peoples[i].Output();
+
+                                }
+                            }
+                        }
+                        if (chooseUser == 3)
+                        {
+                            for (i = 0; i < peopleCount; i++)
+                            {
+                                if (peoples[i].CompareCity())
+                                {
+                                    peoples[i].Output();
+                                }
+                            }
+                        }
+                        if (chooseUser == 4)
+                        {
+                            menuSearch();
+                            cin >> chooseSearch;
+                            if (chooseSearch == 1)
+                            {
+                                
+                                cout << "Введіть прізвище: ";
+                                cin >> PibTmp;
+                                for (i = 0; i < peopleCount; i++)
+                                {
+                                    if (peoples[i].searchPIB(PibTmp))
+                                    {
+                                        peoples[i].Output();
+                                    }
+                                    
+                                }
+                            }
+                            if (chooseSearch == 2)
+                            {
+                                cout << "Введіть рік: ";
+                                cin >> searchYear;
+                                for (i = 0; i < peopleCount; i++)
+                                {
+                                    if (peoples[i].searchYear(searchYear))
+                                    {
+                                        peoples[i].Output();
+                                    }
+
+                                }
+                            }
+                            if (chooseSearch == 3)
+                            {
+                                cout << "Введіть діагноз: ";
+                                cin >> searchDiag;
+                                for (i = 0; i < peopleCount; i++)
+                                {
+                                    if (peoples[i].searchDiag(searchDiag))
+                                    {
+                                        peoples[i].Output();
+                                    }
+
+                                }
+                            }
+                        }
+                        if (chooseUser == 5)
+                        {
+                            menuSort();
+                            cin >> chooseSort;
+                            if (chooseSort == 1)
+                            {
+                                sortPIB(peopleCount, peoples);
+                            }
+                            if (chooseSort == 2)
+                            {
+                                sort(peoples, peoples + peopleCount, compareYear);
+                            }
+                            if (chooseSort == 3)
+                            {
+                                sortDiag(peopleCount, peoples);
+                            }
+                        }
+
+                    }
+                }
+
+            }
+
+
+        }
+
+    }
+}
+
+
